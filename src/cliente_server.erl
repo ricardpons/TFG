@@ -2,8 +2,9 @@
 -behaviour(gen_server).
 -export([start_link/0, temp/1, get_cont/0]).
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
+-include_lib("eunit/include/eunit.hrl").
 -define(concuerror_options, [{module, ?MODULE}, quiet]).
--record(estado, {cont::integer()}).
+-record(estado, {cont::float()}).
 
 
 %% Client API
@@ -11,8 +12,7 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, {}, []).
 
 temp(Num) ->
-    Ges= string:to_float(Num),
-    gen_server:cast(?MODULE, {temp, Ges}).
+    gen_server:cast(?MODULE, {temp, Num}).
 
 
 
@@ -21,13 +21,13 @@ get_cont() ->
 
 %% Server functions
 init({}) ->
-    {ok, #estado{cont=0}}.
+    { #estado{cont=0.0}}.
 
-handle_cast({temp, Ges}, #estado{cont = Cont} = Estado) ->
-    Cels = Ges*  9 / 5 + 32,
+handle_cast({temp, Num}, #estado{cont = Cont} = Estado) ->
+    Cels = Num*  9 / 5 + 32,
     Ger=float_to_list(Cels,[{decimals,2}]),
     io:format("La temperatura en grados Fahrenheit es ~s!~n",[Ger]),
-    {noreply, Estado#estado{cont = Cont }};
+    {reply, Estado#estado{cont =Ger  }};
 
 handle_cast(Msg, Estado) ->
     error_logger:warning_msg("Bad message: ~p~n", [Msg]),
@@ -43,3 +43,7 @@ handle_call(Request, _From, Estado) ->
 terminate(_Reason, _Estado) ->
     ok.
  
+ cels_test() ->
+     ?assertEqual({noreply,9.0},handle_cast({temp,36.5},90.70)).
+  new_test() ->
+    ?assertEqual({noreply,90.70},handle_cast({temp,36.5},90.70)).
